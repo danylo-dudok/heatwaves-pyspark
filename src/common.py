@@ -3,9 +3,6 @@
 from pyspark.sql import DataFrame, Window, functions as F
 
 
-date_window = Window.orderBy("DATE")
-
-
 def clean_data(df: DataFrame) -> DataFrame:
     """
     Exclude rows with missing temperature values required for coldwave detection.
@@ -42,7 +39,7 @@ def with_date(df: DataFrame) -> DataFrame:
 
 def with_prev_date(df: DataFrame) -> DataFrame:
     """Add previous date column."""
-    return df.withColumn("PREV_DATE", F.lag("DATE").over(date_window))
+    return df.withColumn("PREV_DATE", F.lag("DATE").over(Window.orderBy("DATE")))
 
 
 def with_date_diff(df: DataFrame) -> DataFrame:
@@ -58,5 +55,5 @@ def with_group(df: DataFrame) -> DataFrame:
     """
     return (df
             .withColumn("NEW_GROUP", F.when((F.col("DAY_DIFF") != 1) | (F.col("PREV_DATE").isNull()), 1).otherwise(0))
-            .withColumn("GROUP_ID", F.sum("NEW_GROUP").over(date_window))
+            .withColumn("GROUP_ID", F.sum("NEW_GROUP").over(Window.orderBy("DATE")))
     )
